@@ -379,7 +379,7 @@
         },
         "9-10": {
             title: "ゲイリーにありがとうと言って",
-            img: "images/itari.jpg",
+            img: "images/geiri.jpg",
             text: "なんか思ったほど流行らなかった",
             bonusMoney: 10000,
         },
@@ -391,7 +391,7 @@
         },
         "9-23": {
             title: "イタリアン・ブレインロット",
-            img: "images/itari.pmg",
+            img: "images/itari.png",
             text: "トゥントゥントゥン……トゥントゥントゥン……（ナニコレ）",
             bonusMoney: 10000,
         },
@@ -639,11 +639,12 @@
     // ==========================================
     function rollDice(isFree = false) {
         if (document.body.classList.contains('modal-open')) return;
-        // 12月31日ならもう振れない
-        if (state.currentMonthIdx >= 11 && state.currentDay >= 31) return; 
+        
+        // 完全に終了しているかチェック（既にオーバーレイが出ていたら振らせない）
+        if (document.getElementById('new-year-overlay').style.display === 'flex') return;
 
         if (!isFree) subMoney(GAME_CONFIG.DICE_COST, "サイコロ代");
-        const steps = Math.floor(Math.random() * 4) + 1;
+        const steps = Math.floor(Math.random() * 10) + 1;
         movePlayer(steps);
     }
 
@@ -653,23 +654,24 @@
 
         // 月末判定
         if (state.currentDay > month.days) {
-            // 12月かつ月末を越えた場合
+            // 12月かつ月末を越えた場合（＝年越し）
             if (state.currentMonthIdx >= 11) {
-                state.currentDay = month.days; // 31日で止める
+                state.currentDay = month.days; // 表示上は31日に
                 updateView();
-                showHappyNewYear(); // 年越し画面表示
+                // 少しだけ遅らせて演出を出すとスムーズです
+                setTimeout(showHappyNewYear, 500); 
                 return;
             }
 
             // 11月以前なら次の月へ
             state.currentDay -= month.days;
-            state.currentMonthIdx++; // ※ %12 を削除してループさせない
+            state.currentMonthIdx++; 
             
             generateMonthlyEvents(state.currentMonthIdx);
             updateCalendarVisuals();
             updateView(true);
             showBonusModal();
-            UI.statusLog.innerText = `${steps} 進みました（現在: 翌月${state.currentDay}日）`;
+            UI.statusLog.innerText = `${steps} 進みました（現在: ${MONTHS_DATA[state.currentMonthIdx].name}${state.currentDay}日）`;
         } else {
             UI.statusLog.innerText = `${steps} 進みました（現在: ${state.currentDay}日）`;
             updateView();
