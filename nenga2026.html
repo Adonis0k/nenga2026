@@ -16,7 +16,7 @@
             --grid-width: 390px;
             --grid-height: 340px;
 
-            /* マスの色 */
+            /* マスの色（RGBA） */
             --bg-gold:   rgba(255, 215, 0, 0.3);
             --bg-purple: rgba(147, 112, 219, 0.3);
             --bg-blue:   rgba(0, 191, 255, 0.3);
@@ -25,7 +25,6 @@
             --bg-orange: rgba(230, 126, 34, 0.3);
             --bg-red:    rgba(220, 20, 0, 0.5);
             
-            /* フォント */
             --font-main: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
         }
 
@@ -49,7 +48,7 @@
             margin-top: 20px;
         }
 
-        /* サイドバー */
+        /* サイドバー共通 */
         .sidebar {
             width: 130px;
             height: 100%;
@@ -65,11 +64,7 @@
         .status-label { font-size: 11px; color: #95a5a6; margin-bottom: 2px; text-transform: uppercase; }
         .status-value { font-size: 18px; font-weight: bold; color: #f1c40f; transition: color 0.3s; }
         .multiplier-value { color: #2ecc71; }
-        /* もしCSS側に書きたい場合はこちら */
-        #dice-cost-display {
-            color: #ecf0f1; /* 明るいグレー */
-            letter-spacing: 1px;
-        }
+        #dice-cost-display { color: #ecf0f1; letter-spacing: 1px; }
 
         /* カレンダーエリア */
         .calendar-area { position: relative; width: var(--cal-width); height: 100%; }
@@ -99,7 +94,7 @@
         }
 
         /* モーダル */
-        #modal-overlay {
+        .modal-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8);
@@ -109,7 +104,7 @@
             align-items: center;
             z-index: 100;
         }
-        #bonus-modal {
+        .modal-content {
             background: white; padding: 25px; border-radius: 15px; text-align: center; width: 260px;
         }
         .bonus-option {
@@ -132,25 +127,15 @@
         #status-log { color: #666; margin-top: 15px; font-size: 0.9em; }
 
         #event-log {
-            font-size: 1em;
-            color: #2c3e50;
-            height: 120px;       /* ログエリアの固定高 */
-            overflow-y: auto;    /* 縦スクロールを有効に */
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 8px;
-            text-align: left;    /* ログは見やすいように左寄せ */
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            font-size: 1em; color: #2c3e50; height: 120px; overflow-y: auto;
+            margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.5);
+            border-radius: 8px; text-align: left; display: flex;
+            flex-direction: column; gap: 5px;
         }
 
-        /* ログの一行ずつのスタイル */
         .log-entry {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 3px;
-            animation: fadeInDown 0.3s ease-out; /* 新しいログがふわっと出る演出 */
+            border-bottom: 1px solid #ddd; padding-bottom: 3px;
+            animation: fadeInDown 0.3s ease-out;
         }
 
         @keyframes fadeInDown {
@@ -158,23 +143,19 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 特殊イベントマスの専用スタイル */
+        /* 特殊イベントマスの虹色枠 */
         .cell.special-day {
-            background-color: transparent !important; /* 背景は白 */
-            border: 4px double transparent !important; /* 二重線の土台（透明） */
+            background-color: transparent !important;
+            border: 4px double transparent !important;
             border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) 1 !important;
-            position: relative;
-            z-index: 5;
-            animation: rainbow-glow 3s linear infinite; /* 虹色を動かす演出 */
+            position: relative; z-index: 5; animation: rainbow-glow 3s linear infinite;
         }
 
-        /* 虹色をキラキラさせるアニメーション */
         @keyframes rainbow-glow {
             0% { filter: hue-rotate(0deg); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
             50% { box-shadow: 0 0 15px rgba(255,255,255,0.8); }
             100% { filter: hue-rotate(360deg); box-shadow: 0 0 5px rgba(255,255,255,0.5); }
         }
-
     </style>
 </head>
 <body>
@@ -190,7 +171,7 @@
                 <div id="month-display" style="font-size: 18px; font-weight: bold;">1月</div>
             </div>
         </div>
-        
+
         <div class="calendar-area">
             <img id="calendar-bg" src="calendar/01gatu.png" alt="Calendar">
             <div id="grid-overlay"></div>
@@ -204,28 +185,30 @@
             </div>
             <div style="margin-top: 20px;">
                 <div class="status-label">サイコロ代</div>
-                <div id="dice-cost-display" class="status-value" style="color: #bdc3c7; font-size: 16px;">1,000円</div>
+                <div id="dice-cost-display" class="status-value" style="font-size: 16px;">1,000円</div>
+            </div>
+            <div style="margin-top: 15px; border-top: 1px solid #34495e; padding-top: 10px;">
+                <div class="status-label" style="margin-bottom: 5px;">マス情報 (単価 × Lv)</div>
+                <div id="level-list" style="font-size: 11px; color: #ecf0f1; line-height: 1.6;"></div>
             </div>
         </div>
 
-        <div id="modal-overlay">
-            <div id="bonus-modal">
+        <div id="modal-overlay" class="modal-overlay">
+            <div class="modal-content">
                 <h3>🌙 毎月ボーナス</h3>
                 <p style="font-size: 0.9em; color: #666;">ボーナスを選んでください</p>
-                <button class="bonus-option" onclick="applyBonus('money')">💰  所持金 +50000円</button>
+                <button class="bonus-option" onclick="applyBonus('money')">💰 所持金 +50000円</button>
                 <button class="bonus-option" onclick="applyBonus('move')">🏃 3マス進む</button>
                 <button class="bonus-option" onclick="applyBonus('multiplier')">📈 倍率 +0.2</button>
             </div>
         </div>
 
-        <div id="event-modal-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 110; flex-direction: column; justify-content: center; align-items: center;">
-            <div id="event-special-content" style="background: white; padding: 20px; border-radius: 15px; text-align: center; width: 320px; box-shadow: 0 0 30px rgba(255,255,255,0.2);">
+        <div id="event-modal-overlay" class="modal-overlay" style="background: rgba(0,0,0,0.85); z-index: 110;">
+            <div style="background: white; padding: 20px; border-radius: 15px; text-align: center; width: 320px;">
                 <h2 id="special-event-title" style="margin-top: 0; color: #333; font-size: 1.2em;"></h2>
                 <img id="special-event-img" src="" style="width: 100%; height: auto; border-radius: 10px; margin: 10px 0;">
                 <p id="special-event-text" style="color: #555; font-size: 0.9em; line-height: 1.5;"></p>
-                
-                <div id="special-event-buttons" style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-                    </div>
+                <div id="special-event-buttons" style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;"></div>
             </div>
         </div>
     </div>
@@ -235,341 +218,219 @@
         <p id="status-log">2025年スタート！</p>
         <p id="event-log"></p>
     </div>
+    
 
 <script>
     // ==========================================
-    // 1. ゲーム設定（ここを調整してバランスを変える）
+    // 1. 定数・設定
     // ==========================================
     const GAME_CONFIG = {
         DICE_COST: 1000,
-        GOLD_MIN: 10000,
-        GOLD_MAX: 50000,
-        PURPLE_MIN: 20000,
-        BONUS_MONEY_BASE: 50000,   // ボーナスの基本額
-        BONUS_MULTIPLIER_ADD: 0.2, // 倍率上昇量
-        BONUS_MOVE_STEPS: 3,       // 追加で進む歩数
-        COLORS: {
-            TEXT_GOLD: "#f1c40f",
-            TEXT_DEBT: "#ff4d4d"
-        },
-        EVENT_WEIGHTS: {
-            1: 10, // 金：そこそこ出る
-            2: 8,  // 紫：出すぎると辛いので少し抑える
-            3: 12, // 青：成長要素なので多め
-            4: 5,  // 桃：再行動は強力なので少なめ
-            5: 15, // 緑：安定マス、一番出やすい
-            6: 7,  // 橙：投資は計画的に
-            7: 3   // 赤：大逆転はレア
-        },
-        // 空白マスの確率（0にすると全部埋まる、10などにすると何も起きない日ができる）
-        EMPTY_WEIGHT: 15
+        BONUS_MONEY_BASE: 50000,
+        BONUS_MULTIPLIER_ADD: 0.2,
+        BONUS_MOVE_STEPS: 3,
+        MAX_GRID_CELLS: 42,
+        MAX_WEIGHT: 20,    // ID 1 (出現率最大) の時の重み
+        WEIGHT_STEP: 3,    // IDが1上がるごとに減らす重みの量
+        EMPTY_WEIGHT: 15,   // 空白マスの重み
+        COLORS: { TEXT_GOLD: "#f1c40f", TEXT_DEBT: "#ff4d4d" },
+        EVENT_WEIGHTS: { 1: 10, 2: 8, 3: 12, 4: 5, 5: 15, 6: 7, 7: 3 }
     };
 
     const EVENT_TYPES = {
-        1: { name: "金マス", color: "var(--bg-gold)" },
-        2: { name: "紫マス", color: "var(--bg-purple)" },
-        3: { name: "青マス", color: "var(--bg-blue)" },
-        4: { name: "桃マス", color: "var(--bg-pink)" },
-        5: { name: "緑マス", color: "var(--bg-green)" },
-        6: { name: "橙マス", color: "var(--bg-orange)" },
-        7: { name: "赤マス", color: "var(--bg-red)" }
+        1: { name: "金マス", color: "var(--bg-gold)", baseIncome: 1000, level: 1, weight: 20 },
+        2: { name: "紫マス", color: "var(--bg-purple)", baseIncome: 1500, level: 1, weight: 17 },
+        3: { name: "青マス", color: "var(--bg-blue)", baseIncome: 2000, level: 1, weight: 14 },
+        4: { name: "桃マス", color: "var(--bg-pink)", baseIncome: 2500, level: 1, weight: 11 },
+        5: { name: "緑マス", color: "var(--bg-green)", baseIncome: 3000, level: 1, weight: 8 },
+        6: { name: "橙マス", color: "var(--bg-orange)", baseIncome: 3500, level: 1, weight: 5 },
+        7: { name: "赤マス", color: "var(--bg-red)", baseIncome: 4000, level: 1, weight: 2 }
     };
 
     const MONTHS_DATA = [
-        { name: "1月", img: "calendar/01gatu.png", offset: 3, days: 31, events: { 1:1, 2:2, 3:3, 4:4, 5:1, 6:2, 7:3, 8:4, 9:1, 10:2, 11:3, 12:4, 13:1, 14:2, 15:3, 16:4, 17:1, 18:2, 19:3, 20:4, 21:1, 22:2, 23:3, 24:4, 25:1, 26:2, 27:3, 28:4, 29:1, 30:2, 31:3 } },
-        { name: "2月", img: "calendar/02gatu.png", offset: 6, days: 28, events: { 11:4, 14:3, 20:1 } },
-        { name: "3月", img: "calendar/03gatu.png", offset: 6, days: 31, events: { 11:4, 14:3, 20:1 } },
-        { name: "4月", img: "calendar/04gatu.png", offset: 2, days: 30, events: { 11:4, 14:3, 20:1 } },
-        { name: "5月", img: "calendar/05gatu.png", offset: 4, days: 31, events: { 11:4, 14:3, 20:1 } },
-        { name: "6月", img: "calendar/06gatu.png", offset: 0, days: 30, events: { 11:4, 14:3, 20:1 } },
-        { name: "7月", img: "calendar/07gatu.png", offset: 2, days: 31, events: { 11:4, 14:3, 20:1 } },
-        { name: "8月", img: "calendar/08gatu.png", offset: 5, days: 31, events: { 11:4, 14:3, 20:1 } },
-        { name: "9月", img: "calendar/09gatu.png", offset: 1, days: 30, events: { 11:4, 14:3, 20:1 } },
-        { name: "10月", img: "calendar/10gatu.png", offset: 3, days: 31, events: { 11:4, 14:3, 20:1 } },
-        { name: "11月", img: "calendar/11gatu.png", offset: 6, days: 30, events: { 11:4, 14:3, 20:1 } },
-        { name: "12月", img: "calendar/12gatu.png", offset: 1, days: 31, events: { 11:4, 14:3, 20:1 } }
+        { name: "1月", img: "calendar/01gatu.png", offset: 3, days: 31, events: {} },
+        { name: "2月", img: "calendar/02gatu.png", offset: 6, days: 28, events: {} },
+        { name: "3月", img: "calendar/03gatu.png", offset: 6, days: 31, events: {} },
+        { name: "4月", img: "calendar/04gatu.png", offset: 2, days: 30, events: {} },
+        { name: "5月", img: "calendar/05gatu.png", offset: 4, days: 31, events: {} },
+        { name: "6月", img: "calendar/06gatu.png", offset: 0, days: 30, events: {} },
+        { name: "7月", img: "calendar/07gatu.png", offset: 2, days: 31, events: {} },
+        { name: "8月", img: "calendar/08gatu.png", offset: 5, days: 31, events: {} },
+        { name: "9月", img: "calendar/09gatu.png", offset: 1, days: 30, events: {} },
+        { name: "10月", img: "calendar/10gatu.png", offset: 3, days: 31, events: {} },
+        { name: "11月", img: "calendar/11gatu.png", offset: 6, days: 30, events: {} },
+        { name: "12月", img: "calendar/12gatu.png", offset: 1, days: 31, events: {} }
     ];
 
-
-    // 特定の日付に発生する固定イベント
     const SPECIAL_DATE_EVENTS = {
         "1-1": {
             title: "🎍 あけましておめでとう",
             img: "images/2025.jpg",
-            text: "お年玉をもらいました！所持金が30,000円アップ！",
-            action: () => {
-                addMoney(30000, "お年玉");
-            }
+            text: "お年玉をもらいました！",
+            bonusMoney: 30000, // ここで個別金額を指定（指定なしなら10万）
         },
         "1-21": {
             title: "🍨 愛♡スクリ～ム！",
             img: "images/aice.jpg",
             text: "ルビィちゃーん！はーい！何が好き？チョコミントよりも あ・な・た",
-            action: () => {
-                addMoney(50000, "チョコミント");
-            }
+            bonusMoney: 10000,
         },
         "2-14": {
-            title: "🍫 バレンタイン",
+            title: "エッホエッホ",
             img: "images/ehho.png",
-            text: "「エッホエッホ アンパンマンはつぶあんって伝えなきゃ」アンパンを5万円で仕入れて配りますか？（収入倍率が0.5アップします）",
-            options: [
-                {
-                    label: "はい（-5万円）",
-                    color: "#e74c3c",
-                    action: () => {
-                        if (state.money >= 50000) {
-                            subMoney(50000, "エッホエッホ");
-                            updateMultiplier(0.5, "アンパンマンはつぶあんって伝えなきゃ");
-                        } else {
-                            pushLog("お金が足りなくてアンパンが買えませんでした…");
-                        }
-                    }
-                },
-                {
-                    label: "いいえ",
-                    color: "#95a5a6",
-                    action: () => {
-                        pushLog("アンパンはスルーしました。");
-                    }
-                }
-            ]
+            text: "2025年は終わりって伝えなきゃ",
+            bonusMoney: 10000,
+        },
+        "3-4": {
+            title: "お前それ次やったらマジで〝これ〟だからな",
+            img: "images/kore.png",
+            text: "元ネタ特定の画像じゃないんで各自検索してね",
+            bonusMoney: 10000,
+        },
+        "3-23": {
+            title: "見なよ…オレの司を…",
+            img: "images/oreno.png",
+            text: "推し声優のためにマンガ書いてアニメ化までさせたというトンデモ逸話",
+            bonusMoney: 10000,
         },
         "4-13": {
-            title: "🎡 大阪・関西万博 開幕！",
+            title: "大阪・関西万博",
             img: "images/myaku.jpg",
-            text: "ミャク冖様！",
-            options: [
-                {
-                    label: "万博に行く（-5万円）",
-                    color: "#e74c3c",
-                    action: () => {
-                        if (state.money >= 50000) {
-                            subMoney(50000, "万博入場料");
-                            updateMultiplier(0.5, "50年に一度の体験");
-                        } else {
-                            pushLog("資金不足で万博に行けませんでした…");
-                        }
-                    }
-                },
-                {
-                    label: "行かない",
-                    color: "#3498db",
-                    action: () => {
-                        pushLog("万博に行きませんでした");
-                    }
-                }
-            ]
+            text: "行けなった…",
+            bonusMoney: 10000,
         },
         "5-2": {
-            title: "イマソ刈りメタモン",
+            title: "メタモン",
             img: "images/meta.jpg",
-            text: "すごい(https://www.pixiv.net/users/20522049)",
-            action: () => {
-                updateMultiplier(0.5, "メタモン");
-            }
+            text: "見て→(https://www.pixiv.net/users/20522049)",
+            bonusMoney: 10000,
         },
         "5-9": {
             title: "猫影ポーズ",
             img: "images/kageneko.jpg",
-            text: "いいよね",
-            action: () => {
-                addMoney(10000, "影猫");
-            }
+            text: "わりと好き",
+            bonusMoney: 10000,
         },
         "5-31": {
             title: "お返事まだカナ?おじさん構文!",
             img: "images/ozi.jpg",
             text: "個人的に一過性のネタ系は好みでないが、曲は良いと思う",
-            action: () => {
-                addMoney(10000, "おじさん構文");
-            }
+            bonusMoney: 10000,
         },
         "6-17": {
             title: "Shadowverse: Worlds Beyond",
             img: "images/syad.jpg",
             text: "私は半年もこんなゲームやってるのか",
-            action: () => {
-                updateMultiplier(0.1, "シャドバ");
-            }
+            bonusMoney: 10000,
         },
         "6-21": {
             title: "",
             img: "images/naruto.png",
-            text: "収入倍率が0.5アップで今これ",
-            action: () => {
-                updateMultiplier(0.5, "今これ");
-            }
+            text: "今これ",
+            bonusMoney: 10000,
         },
         "6-24": {
             title: "機動戦士Gundam GQuuuuuuX",
             img: "images/ganda.jpg",
             text: "ガンダム初見だったけど面白かったよ",
-            action: () => {
-                updateMultiplier(0.2, "ガンダム");
-            }
+            bonusMoney: 10000,
         },
         "7-10": {
             title: "容態急変【FULL】",
             img: "images/asmr.jpg",
             text: "これBANされないか？",
-            action: () => {
-                subMoney(30000, "容態急変【FULL】");
-            }
+            bonusMoney: 10000,
         },
         "7-15": {
             title: "Grok Ani",
             img: "images/ani.jpg",
-            text: "イーロンの趣味、悪くない説",
-            action: () => {
-                addMoney(20000, "Ani");
-            }
+            text: "イーロンの良い側面",
+            bonusMoney: 10000,
         },
         "7-18": {
             title: "劇場版「鬼滅の刃」無限城編 』第一章 猗窩座再来』",
             img: "images/akaza.jpg",
-            text: "お前も鬼にならないか？",
-            options: [
-                {
-                    label: "鬼になる（10万獲得し、倍率-0.6）",
-                    color: "#e74c3c",
-                    action: () => {
-                        updateMultiplier(-0.9, "鬼になった");
-                        addMoney(300000, "鬼になった")
-                    }
-                },
-                {
-                    label: "ならない！（10万失う）",
-                    color: "#3498db",
-                    action: () => {
-                        subMoney(100000, "鬼にならなかった");
-                    }
-                }
-            ]
+            text: "上限の参！？なぜここに！？",
+            bonusMoney: 10000,
         },
         "7-19": {
             title: "魔法少女ノ魔女裁判",
-            img: "images/manosa.jpg",
+            img: "images/manosa.png",
             text: "✋「ちょっと待って！」個人的神ゲーなので是非",
-            action: () => {
-                addMoney(10000, "炙り瓶")
-            }
+            bonusMoney: 10000,
         },
         "7-21": {
             title: "wplace",
-            img: "images/place.jpg",
+            img: "images/wplace.png",
             text: "そっこーで荒らされて可哀そうだった",
-            action: () => {
-                addMoney(10000, "wplace")
-            }
+            bonusMoney: 10000,
         },
         "8-20": {
             title: "まるで本物のようです",
             img: "images/same.jpg",
             text: "家でもパーティーでも、エッチな服を着て友達や家族を怖がらせましょう！",
-            action: () => {
-                updateMultiplier(0.2, "怖がらせましょう！");
-            }
+            bonusMoney: 10000,
         },
         "9-8": {
             title: "うまくヘッダーに収まらない",
             img: "images/header.png",
             text: "うまくいったのでヘッダー見てください",
-            action: () => {
-                addMoney(10000, "ヘッダー")
-            }
+            bonusMoney: 10000,
         },
         "9-10": {
             title: "ゲイリーにありがとうと言って",
             img: "images/itari.jpg",
-            text: "ゲイリーはあなたが毎日食べているか確かめたいんだ。ゲイリーにありがとうと言って",
-            options: [
-                {
-                    label: "ありがとう",
-                    color: "#e74c3c",
-                    action: () => {
-                        addMoney(10000, "ありがとう")
-                    }
-                },
-                {
-                    label: "いわない",
-                    color: "#3498db",
-                    action: () => {
-                        pushLog(`ゲイリーに感謝しなかった`);
-                    }
-                }
-            ]
+            text: "なんか思ったほど流行らなかった",
+            bonusMoney: 10000,
         },
         "9-19": {
             title: "劇場版『チェンソーマン レゼ篇』",
             img: "images/reze.png",
-            text: "自認レぜでもいいと思います（収入倍率が0.2アップ）",
-            action: () => {
-                updateMultiplier(0.2, "BOM!");
-            }
+            text: "自認レぜでもいいと思います",
+            bonusMoney: 10000,
         },
         "9-23": {
             title: "イタリアン・ブレインロット",
             img: "images/itari.pmg",
-            text: "トゥントゥントゥン……トゥントゥントゥン……（収入倍率が0.1アップ）",
-            action: () => {
-                updateMultiplier(0.1, "何これ");
-            }
+            text: "トゥントゥントゥン……トゥントゥントゥン……（ナニコレ）",
+            bonusMoney: 10000,
+        },
+        "10-3": {
+            title: "野原ひろし 昼メシの流儀",
+            img: "images/hirosi.jpg",
+            text: "領 域 展 開",
+            bonusMoney: 10000,
         },
         "10-14": {
             title: "ポケモンレジェンズ Z-A",
-            img: "images/za.jpg",
-            text: "女装できることしか知らない",
-            action: () => {
-                addMoney(80000, "ポケモン")
-            }
+            img: "images/za.png",
+            text: "これと女装できることしか知らない",
+            bonusMoney: 10000,
         },
         "10-16": {
             title: "イナズマイレブン 英雄たちのヴィクトリーロード",
             img: "images/inazuma.jpg",
             text: "8年越しの発売！",
-            action: () => {
-                addMoney(80000, "イナズマイレブン")
-            }
+            bonusMoney: 10000,
         },
         "11-13": {
             title: "グエー死んだンゴ",
             img: "images/gue-.jpg",
-            text: "",
-            action: () => {
-                state.money = Math.abs(state.money);
-                pushLog(`成仏してクレメンス（借金がある場合プラスに変化）`);
-            }
+            text: "成仏してクレメンス",
+            bonusMoney: 10000,
         },
         "12-25": {
-            title: "うふ～ん♡女よ～ん♡paypayに送金して～ん♡",
-            img: "images/noimage.png", // ユーザー様が用意する画像パス
-            text: "うふ～ん♡女よ～ん♡paypayに送金して～ん♡",
-            action: () => {
-                addMoney(50000, "クリスマスプレゼント");
-                updateMultiplier(0.5, "クリスマスプレゼント");
-            }
-        },
-        "12-25": {
-            title: "🎄 メリークリスマス！！",
-            img: "images/chicken.jpg", // ユーザー様が用意する画像パス
-            text: "サンタさんからプレゼント！所持金が50,000円アップし、倍率が0.5上がりました！",
-            action: () => {
-                addMoney(50000, "クリスマスプレゼント");
-                updateMultiplier(0.5, "クリスマスプレゼント");
-            }
+            title: "メリークリスマス！！",
+            img: "images/chicken.jpg",
+            text: "今年もチキン温めてますか？",
+            bonusMoney: 10000,
         }
     };
 
     // ==========================================
     // 2. 状態管理 & DOMキャッシュ
     // ==========================================
-    let state = {
-        currentMonthIdx: 0,
-        currentDay: 1,
-        money: 0,
-        multiplier: 1.0
-    };
+    let state = { currentMonthIdx: 0, currentDay: 1, money: 0, multiplier: 1.0 };
 
     const UI = {
         overlay: document.getElementById('grid-overlay'),
@@ -578,99 +439,102 @@
         month: document.getElementById('month-display'),
         money: document.getElementById('money-display'),
         multiplier: document.getElementById('multiplier-display'),
-        modal: document.getElementById('modal-overlay'),
+        diceCost: document.getElementById('dice-cost-display'),
+        levelList: document.getElementById('level-list'),
+        bonusModal: document.getElementById('modal-overlay'),
+        eventModal: document.getElementById('event-modal-overlay'),
         statusLog: document.getElementById('status-log'),
-        eventLog: document.getElementById('event-log')
+        eventLog: document.getElementById('event-log'),
+        spTitle: document.getElementById('special-event-title'),
+        spImg: document.getElementById('special-event-img'),
+        spText: document.getElementById('special-event-text'),
+        spButtons: document.getElementById('special-event-buttons')
     };
 
     // ==========================================
-    // 3. 基本システム
+    // 3. 初期化 & 表示更新
     // ==========================================
-
     function initGrid() {
         UI.overlay.innerHTML = '';
-        for (let i = 0; i < 42; i++) {
+        for (let i = 0; i < GAME_CONFIG.MAX_GRID_CELLS; i++) {
             const cell = document.createElement('div');
-            cell.classList.add('cell');
+            cell.className = 'cell';
             cell.id = `cell-${i}`;
             UI.overlay.appendChild(cell);
         }
-        // サイコロ代の表示を初期化
-        document.getElementById('dice-cost-display').innerText = GAME_CONFIG.DICE_COST.toLocaleString() + "円";
-
-        // 1月のイベントを生成
+        UI.diceCost.innerText = GAME_CONFIG.DICE_COST.toLocaleString() + "円";
         generateMonthlyEvents(state.currentMonthIdx);
-
         updateCalendarVisuals();
         updateView();
     }
 
+    function updateLevelDisplay() {
+        if (!UI.levelList) return;
+        UI.levelList.innerHTML = '';
+        Object.entries(EVENT_TYPES).forEach(([id, ev]) => {
+            const item = document.createElement('div');
+            item.innerHTML = `<span style="color:${ev.color}">■</span> ${ev.name}: ${ev.baseIncome.toLocaleString()} × <span style="color:#f1c40f">Lv.${ev.level}</span>`;
+            UI.levelList.appendChild(item);
+        });
+    }
+
     function updateCalendarVisuals() {
-        const monthIdx = state.currentMonthIdx;
-        const month = MONTHS_DATA[monthIdx];
-        
+        const month = MONTHS_DATA[state.currentMonthIdx];
         document.querySelectorAll('.cell').forEach((cell, i) => {
-            // 全てリセット
             cell.style.backgroundColor = 'transparent';
             cell.classList.remove('special-day');
             
             const day = i - month.offset + 1;
             if (day >= 1 && day <= month.days) {
-                const dateKey = `${monthIdx + 1}-${day}`;
-
-                // 特殊イベントがあるか判定
+                const dateKey = `${state.currentMonthIdx + 1}-${day}`;
                 if (SPECIAL_DATE_EVENTS[dateKey]) {
-                    // 虹色の二重線クラスを適用
                     cell.classList.add('special-day');
                 } else {
-                    // 通常のランダムイベントの色
-                    const eventId = month.events ? month.events[day] : null;
-                    if (EVENT_TYPES[eventId]) {
-                        cell.style.backgroundColor = EVENT_TYPES[eventId].color;
-                    }
+                    const eventId = month.events[day];
+                    if (EVENT_TYPES[eventId]) cell.style.backgroundColor = EVENT_TYPES[eventId].color;
                 }
             }
         });
     }
 
     function updateView(skipEvent = false) {
-        const monthIdx = state.currentMonthIdx;
-        const day = state.currentDay;
         const month = MONTHS_DATA[state.currentMonthIdx];
         UI.bg.src = month.img;
         UI.month.innerText = month.name;
         UI.multiplier.innerText = state.multiplier.toFixed(1);
 
-        // イベント判定
-        if (!skipEvent) {
-            const dateKey = `${monthIdx + 1}-${day}`;
-            if (SPECIAL_DATE_EVENTS[dateKey]) {
-                const ev = SPECIAL_DATE_EVENTS[dateKey];
-                showSpecialEvent(ev);
-                if (ev.action) ev.action(); // 設定された効果（お金や倍率）を実行
-            } else {
-                // 特定日のイベントがない場合のみ、通常のランダムイベントを実行
-                const eventId = month.events ? month.events[day] : null;
-                handleEvents(eventId);
-            }
-        }
+        updateLevelDisplay();
+        if (!skipEvent) checkEvents();
+        updateTokenPosition();
 
-        // 駒の移動
+        updateCalendarVisuals();
+    }
+
+    function updateTokenPosition() {
+        const month = MONTHS_DATA[state.currentMonthIdx];
         const cellIndex = month.offset + state.currentDay - 1;
-        const targetCell = document.getElementById(`cell-${cellIndex}`);
+        const target = document.getElementById(`cell-${cellIndex}`);
+        if (target) {
+            const x = target.offsetLeft + UI.overlay.offsetLeft + (target.offsetWidth / 2);
+            const y = target.offsetTop + UI.overlay.offsetTop + (target.offsetHeight / 2);
+            UI.token.style.left = x + 'px';
+            UI.token.style.top = y + 'px';
+        }
+    }
+
+    // ==========================================
+    // 4. イベントロジック
+    // ==========================================
+    function checkEvents() {
+        const dateKey = `${state.currentMonthIdx + 1}-${state.currentDay}`;
+        const spEvent = SPECIAL_DATE_EVENTS[dateKey];
         
-        if (targetCell) {
-            // 1. セル自身の中心座標を計算
-            const centerX = targetCell.offsetLeft + (targetCell.offsetWidth / 2);
-            const centerY = targetCell.offsetTop + (targetCell.offsetHeight / 2);
-
-            // 2. 親要素である #grid-overlay のズレ（CSS変数から取得）を足す
-            // これにより、カレンダー画像上の正しい位置に駒が移動します
-            const gridShiftX = UI.overlay.offsetLeft;
-            const gridShiftY = UI.overlay.offsetTop;
-
-            UI.token.style.left = (centerX + gridShiftX) + 'px';
-            UI.token.style.top = (centerY + gridShiftY) + 'px';
+        if (spEvent) {
+            showSpecialEvent(spEvent);
+            if (spEvent.action) spEvent.action();
+        } else {
+            const month = MONTHS_DATA[state.currentMonthIdx];
+            handleEvents(month.events[state.currentDay]);
         }
     }
 
@@ -679,164 +543,264 @@
             pushLog(`特になし`);
             return;
         }
-        switch (id) {
-            case 1: // 金：1万～5万（倍率適用）
-                const randomBase = Math.floor(Math.random() * (GAME_CONFIG.GOLD_MAX / 100 - GAME_CONFIG.GOLD_MIN / 100 + 1) + GAME_CONFIG.GOLD_MIN / 100) * 100;
-                addMoney(randomBase, "金マス ラッキー！");
-                break;
-            case 2: // 紫：2万～（所持金+2万）（固定引）
-                const currentUpperLimit = Math.max(GAME_CONFIG.PURPLE_MIN, state.money + 20000);
-                const randomLoss = Math.floor(Math.random() * (currentUpperLimit / 100 - GAME_CONFIG.PURPLE_MIN / 100 + 1) + GAME_CONFIG.PURPLE_MIN / 100) * 100;
-                subMoney(randomLoss, "紫マス 失敗！");
-                break;
-            case 3: // 青：倍率アップ
-                updateMultiplier(0.1, "青マス 成長！");
-                break;
-            case 4: // 桃：再行動
-                pushLog(`桃マス：やる気がみなぎる！もう一度サイコロを振ります。`);
-                // rollDiceを直接呼ぶと連続移動するので、少しディレイをかけると自然です
-                setTimeout(rollDice(true), 1000);
-                break;
-            case 5: // 緑：安定
-                addMoney(5000, "緑マス"); // 少額だが確実なプラス
-                break;
 
-            case 6: // 橙：投資（ハイリスクハイリターン）
-                subMoney(10000, "橙マス 投資費用！");
-                updateMultiplier(0.1, "橙マス 将来への投資！");
-                break;
+        const event = EVENT_TYPES[id];
+        
+        // 1. 収入を計算（現在のレベルで計算）
+        const income = event.baseIncome * event.level;
+        addMoney(income, `${event.name} (Lv.${event.level})`);
 
-            case 7: // 赤：大逆転
-                if (state.money < 0) {
-                    state.money = Math.abs(state.money);
-                    pushLog(`【赤マス 奇跡の大逆転！】借金がそのままプラスに転じた！`);
-                } else {
-                    state.multiplier += 0.3;
-                    updateMultiplier(0.3, "赤マス 絶好調！");
-                }
-                updateMoneyUI();
-                break;
+        // 2. そのマスのレベルを 1 上げる
+        event.level += 1;
+        pushLog(`${event.name}のレベルが上がった！ (Lv.${event.level-1} → Lv.${event.level})`);
+
+        // 3. 右サイドバーのレベル表示を最新にする
+        updateLevelDisplay();
+    }
+
+    function generateMonthlyEvents(idx) {
+        const month = MONTHS_DATA[idx];
+        month.events = {};
+        for (let d = 1; d <= month.days; d++) {
+            const id = getRandomEventId();
+            if (id) month.events[d] = id;
         }
     }
 
-    /**
-     * 月のイベントを重み付きランダムで生成して MONTHS_DATA を更新する
-     */
-    function generateMonthlyEvents(monthIdx) {
-        const month = MONTHS_DATA[monthIdx];
-        month.events = {}; // 既存のイベントをクリア
-
-        for (let day = 1; day <= month.days; day++) {
-            const eventId = getRandomEventId();
-            if (eventId) {
-                month.events[day] = eventId;
-            }
-        }
-    }
-
-    /**
-     * 重みに基づいてランダムなイベントIDを一つ選ぶ
-     */
     function getRandomEventId() {
-        const weights = GAME_CONFIG.EVENT_WEIGHTS;
-        const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0) + GAME_CONFIG.EMPTY_WEIGHT;
+        const ids = Object.keys(EVENT_TYPES).map(Number);
+        const totalEventWeight = ids.reduce((sum, id) => sum + EVENT_TYPES[id].weight, 0);
+        const totalWeight = totalEventWeight + GAME_CONFIG.EMPTY_WEIGHT;
         
-        let random = Math.random() * totalWeight;
-        
-        // イベントID 1〜7 を判定
-        for (const [id, weight] of Object.entries(weights)) {
-            if (random < weight) return parseInt(id);
-            random -= weight;
+        let r = Math.random() * totalWeight;
+        for (const id of ids) {
+            if (r < EVENT_TYPES[id].weight) return id;
+            r -= EVENT_TYPES[id].weight;
         }
-        
-        // どれにも当てはまらなければ空（null）
         return null;
     }
 
-    /**
-     * 特殊イベントを表示する
-     * @param {string} title - タイトル
-     * @param {string} imgSrc - 画像URL
-     * @param {string} text - 説明文
-     */
     function showSpecialEvent(ev) {
-        document.getElementById('special-event-title').innerText = ev.title;
-        document.getElementById('special-event-img').src = ev.img;
-        document.getElementById('special-event-text').innerText = ev.text;
+        UI.spTitle.innerText = ev.title;
+        UI.spImg.src = ev.img;
+        UI.spImg.style.width = '100%';         // 横幅いっぱいに広げる
+        UI.spImg.style.height = '250px';       // 高さを250pxに固定（ここはお好みで）
+        UI.spImg.style.objectFit = 'contain';  // ★比率を保ったまま枠に収める
+        UI.spImg.style.display = 'block';      // 崩れ防止
+        UI.spImg.style.margin = '0 auto 15px'
         
-        const buttonContainer = document.getElementById('special-event-buttons');
-        buttonContainer.innerHTML = ''; // ボタンをクリア
+        const displayAmount = ev.bonusMoney !== undefined ? ev.bonusMoney : 100000;
+        UI.spText.innerText = `${ev.text}\n（報酬 ${displayAmount.toLocaleString()}円 ＋ 特典選択）`;
+        
+        UI.spButtons.innerHTML = '';
 
-        if (ev.options) {
-            // YES/NO などの選択肢がある場合
-            ev.options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.innerText = opt.label;
-                btn.style.cssText = "flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background: " + (opt.color || "#3498db") + "; color: white;";
-                btn.onclick = () => {
-                    closeSpecialEvent();
-                    if (opt.action) opt.action();
-                };
-                buttonContainer.appendChild(btn);
-            });
-        } else {
-            // 通常の「OK」のみの場合
+        // 月替わりと同じように「レベル」と「出現率」の全パターンを候補にする
+        let candidates = [];
+        Object.keys(EVENT_TYPES).forEach(id => {
+            candidates.push({ type: 'LEVEL', id: Number(id) });
+            candidates.push({ type: 'WEIGHT', id: Number(id) });
+        });
+
+        // ランダムに3つ選出
+        const selectedOptions = candidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+        selectedOptions.forEach(opt => {
+            const typeData = EVENT_TYPES[opt.id];
             const btn = document.createElement('button');
-            btn.innerText = "OK";
-            btn.style.cssText = "padding: 10px 40px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background: #27ae60; color: white;";
-            btn.onclick = closeSpecialEvent;
-            buttonContainer.appendChild(btn);
-        }
-        
-        document.getElementById('event-modal-overlay').style.display = 'flex';
+            
+            // ラベルの出し分け
+            const label = opt.type === 'LEVEL' ? `${typeData.name} Lv+5` : `${typeData.name} 出現率UP`;
+            btn.innerText = label;
+            
+            // スタイル設定（色はEVENT_TYPESの変数を使用）
+            btn.style.cssText = `flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background: ${typeData.color.replace('0.3', '1')}; color: black; font-size: 11px;`;
+            
+            
+            btn.onclick = () => {
+                // 選択された type (LEVEL か WEIGHT) を渡して実行
+                applyBonusEffect(opt.type, opt.id, ev.bonusMoney); 
+                closeSpecialEvent();
+            };
+            UI.spButtons.appendChild(btn);
+        });
+
+        UI.eventModal.style.display = 'flex';
         document.body.classList.add('modal-open');
     }
 
-
-    /**
-     * 特殊イベントを閉じる
-     */
     function closeSpecialEvent() {
-        document.getElementById('event-modal-overlay').style.display = 'none';
+        UI.eventModal.style.display = 'none';
         document.body.classList.remove('modal-open');
         pushLog("特殊イベントを確認しました。");
     }
 
-    /**
-     * ログに新しいメッセージを追加する（最新が上）
-     */
-    function pushLog(message) {
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
+    // ==========================================
+    // 5. ゲームアクション
+    // ==========================================
+    function rollDice(isFree = false) {
+        if (document.body.classList.contains('modal-open')) return;
+        // 12月31日ならもう振れない
+        if (state.currentMonthIdx >= 11 && state.currentDay >= 31) return; 
+
+        if (!isFree) subMoney(GAME_CONFIG.DICE_COST, "サイコロ代");
+        const steps = Math.floor(Math.random() * 4) + 1;
+        movePlayer(steps);
+    }
+
+    function movePlayer(steps) {
+        state.currentDay += steps;
+        const month = MONTHS_DATA[state.currentMonthIdx];
+
+        // 月末判定
+        if (state.currentDay > month.days) {
+            // 12月かつ月末を越えた場合
+            if (state.currentMonthIdx >= 11) {
+                state.currentDay = month.days; // 31日で止める
+                updateView();
+                showHappyNewYear(); // 年越し画面表示
+                return;
+            }
+
+            // 11月以前なら次の月へ
+            state.currentDay -= month.days;
+            state.currentMonthIdx++; // ※ %12 を削除してループさせない
+            
+            generateMonthlyEvents(state.currentMonthIdx);
+            updateCalendarVisuals();
+            updateView(true);
+            showBonusModal();
+            UI.statusLog.innerText = `${steps} 進みました（現在: 翌月${state.currentDay}日）`;
+        } else {
+            UI.statusLog.innerText = `${steps} 進みました（現在: ${state.currentDay}日）`;
+            updateView();
+        }
+    }
+
+    function showBonusModal() {
+        if (!UI.bonusModal) return;
+
+        // 選択肢候補を作成（各IDに対して「レベル」と「出現率」の2パターン）
+        let candidates = [];
+        Object.keys(EVENT_TYPES).forEach(id => {
+            candidates.push({ type: 'LEVEL', id: Number(id) });
+            candidates.push({ type: 'WEIGHT', id: Number(id) });
+        });
+
+        // シャッフルして3つ選ぶ
+        const selectedOptions = candidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+        const modalContent = UI.bonusModal.querySelector('.modal-content');
+        modalContent.innerHTML = `
+            <h3>🌙 毎月ボーナス</h3>
+            <p>報酬10万円 ＋ 特典を選んでください</p>
+        `;
+
+        selectedOptions.forEach(opt => {
+            const ev = EVENT_TYPES[opt.id];
+            const btn = document.createElement('button');
+            btn.className = 'bonus-option';
+            
+            const label = opt.type === 'LEVEL' ? `${ev.name} Lv+5` : `${ev.name} 出現率UP`;
+            btn.innerHTML = `<span style="color:${ev.color.replace('0.3', '1')}">■</span> ${label}`;
+            
+            btn.onclick = () => {
+                applyBonusEffect(opt.type, opt.id);
+                updateDiceCost(); // 毎月ボーナス時のみサイコロ代更新
+                UI.bonusModal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                updateView(true);
+            };
+            modalContent.appendChild(btn);
+        });
+
+        UI.bonusModal.style.display = 'flex';
+        document.body.classList.add('modal-open');
+    }
+
+    function applyBonus(selectedEventId) {
+        applyBonusEffect(selectedEventId); // 10万円加算とLv+5
+
+        // ボーナス適用後の所持金に基づいてサイコロ代を更新
+        updateDiceCost();
+
+        UI.bonusModal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        updateView(true);
+    }
+
+    // 金額とイベントIDを受け取って適用する
+    function applyBonusEffect(type, id, amount) {
+        // 1. 固定報酬
+        const finalAmount = amount !== undefined ? amount : 100000;
+        state.money += finalAmount;
+        updateMoneyUI();
+
+        const ev = EVENT_TYPES[id];
+        if (type === 'LEVEL') {
+            ev.level += 5;
+            pushLog(`【ボーナス】${ev.name}のレベルが 5 上がった！`);
+        } else if (type === 'WEIGHT') {
+            ev.weight += 10; // 出現率（重み）を10アップ
+            pushLog(`【ボーナス】${ev.name}の出現率がアップした！`);
+        }
         
-        // 現在の日付情報などを付けても面白いです
-        const month = MONTHS_DATA[state.currentMonthIdx].name;
-        entry.innerHTML = `<strong>[${month}${state.currentDay}日]</strong> ${message}`;
+        updateLevelDisplay();
+    }
+
+    // 所持金の3%を計算してサイコロ代を更新する関数
+    function updateDiceCost() {
+        // 所持金の3%を計算（小数点以下切り捨て）
+        // 所持金がマイナスの場合は最低額（例: 1000円）にするなどのガードを入れると安定します
+        const newCost = Math.max(1000, Math.floor(state.money * 0.03));
         
-        // 先頭に挿入
-        UI.eventLog.prepend(entry);
+        GAME_CONFIG.DICE_COST = newCost;
         
-        // 自動で一番上（最新）にスクロール
-        UI.eventLog.scrollTop = 0;
+        // UI表示の更新
+        if (UI.diceCost) {
+            UI.diceCost.innerText = GAME_CONFIG.DICE_COST.toLocaleString() + "円";
+        }
+        pushLog(`【支出アップ】サイコロ代が ${GAME_CONFIG.DICE_COST.toLocaleString()}円になりました。`);
+    }
+
+
+    function checkYearEnd() {
+        // 12月(インデックス11)の31日を超えたら実行
+        if (state.currentMonthIdx >= 11 && state.currentDay >= 31) {
+            showHappyNewYear();
+        }
+    }
+
+    function showHappyNewYear() {
+        const overlay = document.getElementById('new-year-overlay');
+        const resultArea = document.getElementById('fortune-result');
+        
+        // 最終所持金をフォーマット
+        const finalMoney = state.money.toLocaleString();
+        
+        // 画面を表示
+        overlay.style.display = 'flex';
+        resultArea.innerHTML = `2026年のあなたの運気は<br><span style="font-size: 4rem; color: #ffd700;">${finalMoney}円</span> です！`;
+
+        // 豪華な演出（簡易的な紙吹雪代わりのログなど）
+        console.log("HAPPY NEW YEAR!");
+        pushLog("★祝★ 2026年になりました！");
     }
 
     // ==========================================
-    // 4. マネーシステム
+    // 6. ユーティリティ
     // ==========================================
-
-    function addMoney(baseAmount, source) {
-        const gain = Math.floor(baseAmount * state.multiplier);
+    function addMoney(amt, src) {
+        const gain = Math.floor(amt * state.multiplier);
         state.money += gain;
         updateMoneyUI();
-        pushLog(`【${source}】${gain.toLocaleString()}円獲得！ (${baseAmount.toLocaleString()} × ${state.multiplier.toFixed(1)}倍)`);
+        pushLog(`【${src}】${gain.toLocaleString()}円獲得！ (${amt.toLocaleString()} × ${state.multiplier.toFixed(1)}倍)`);
         return gain;
     }
 
-    function subMoney(amount, source) {
-        state.money -= amount;
+    function subMoney(amt, src) {
+        state.money -= amt;
         updateMoneyUI();
-        pushLog(`【${source}】${amount.toLocaleString()}円失った…`);
-        return amount;
+        pushLog(`【${src}】${amt.toLocaleString()}円失った…`);
     }
 
     function updateMoneyUI() {
@@ -844,136 +808,30 @@
         UI.money.style.color = state.money < 0 ? GAME_CONFIG.COLORS.TEXT_DEBT : GAME_CONFIG.COLORS.TEXT_GOLD;
     }
 
-    /**
-     * 倍率を変更し、UI更新とログ出力を行う共通関数
-     * @param {number} changeValue - 増減させる値（0.1 や -0.2 など）
-     * @param {string} sourceName - ログに表示するソース名
-     */
-    function updateMultiplier(changeValue, sourceName) {
-        const oldMultiplier = state.multiplier;
-        state.multiplier += changeValue;
-
-        // --- ガード：倍率の最小値を 0.1 に固定（0以下で収入が消えないように） ---
-        if (state.multiplier < 0.1) state.multiplier = 0.1;
-        
-        // --- ガード：最大値を 10.0 などに設定（インフレ防止・お好みで） ---
-        if (state.multiplier > 10.0) state.multiplier = 10.0;
-
-        // UI更新
+    function updateMultiplier(val, src) {
+        state.multiplier = Math.min(Math.max(state.multiplier + val, 0.1), 10.0);
         UI.multiplier.innerText = state.multiplier.toFixed(1);
-        
-        // ログ出力
-        const sign = changeValue >= 0 ? "アップ" : "ダウン";
-        const diff = Math.abs(changeValue).toFixed(1);
-        pushLog(`【${sourceName}】倍率が ${diff} ${sign}！ (x${oldMultiplier.toFixed(1)} → x${state.multiplier.toFixed(1)})`);
+        pushLog(`【${src}】倍率が変化！ (x${state.multiplier.toFixed(1)})`);
     }
 
-    // ==========================================
-    // 5. アクション（サイコロ・ボーナス）
-    // ==========================================
-
-    function rollDice(isFree = false) {
-        if (document.body.classList.contains('modal-open')) return;
-
-        // subMoney を使うことでログにも残り、借金（マイナス）も許容されます
-        if (!isFree) {
-            subMoney(GAME_CONFIG.DICE_COST, "サイコロ代");
-        }
-
-        const dice = Math.floor(Math.random() * 4) + 1;
-        movePlayer(dice);
+    function pushLog(msg) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const mName = MONTHS_DATA[state.currentMonthIdx].name;
+        entry.innerHTML = `<strong>[${mName}${state.currentDay}日]</strong> ${msg}`;
+        UI.eventLog.prepend(entry);
+        UI.eventLog.scrollTop = 0;
     }
 
-    
-    function movePlayer(steps) {
-        state.currentDay += steps;
-        const month = MONTHS_DATA[state.currentMonthIdx];
-
-        if (state.currentDay > month.days) {
-            state.currentDay -= month.days;
-            state.currentMonthIdx = (state.currentMonthIdx + 1) % 12;
-
-            generateMonthlyEvents(state.currentMonthIdx);
-
-            updateCalendarVisuals();
-            updateView(true); 
-            showBonusModal();UI.statusLog.innerText = `${steps} 進みました（現在: 翌月${state.currentDay}日）`;
-        } else {
-            UI.statusLog.innerText = `${steps} 進みました（現在: ${state.currentDay}日）`;
-            updateView();
-        }
-    }
-
-    // function movePlayer(steps) {
-    //     let remainingSteps = steps;
-    //     let stopReason = "";
-
-    //     // 1歩ずつ進んで、特殊イベントがあるかチェックする
-    //     for (let i = 0; i < steps; i++) {
-    //         state.currentDay++;
-    //         remainingSteps--;
-
-    //         const month = MONTHS_DATA[state.currentMonthIdx];
-
-    //         // 月をまたぐ判定
-    //         if (state.currentDay > month.days) {
-    //             state.currentDay = 1; // 1日にリセット
-    //             state.currentMonthIdx = (state.currentMonthIdx + 1) % 12;
-    //             generateMonthlyEvents(state.currentMonthIdx);
-    //             updateCalendarVisuals();
-                
-    //             // 月またぎは強制停止（ボーナス選択があるため）
-    //             stopReason = "月初めのため停止します";
-    //             break; 
-    //         }
-
-    //         // --- ここが重要：特殊イベントの日かチェック ---
-    //         const dateKey = `${state.currentMonthIdx + 1}-${state.currentDay}`;
-    //         if (SPECIAL_DATE_EVENTS[dateKey]) {
-    //             stopReason = "特殊イベントのため停止します！";
-    //             break; // ループを抜けて、残りの歩数を破棄する
-    //         }
-    //     }
-
-    //     // 最終的な位置で表示を更新
-    //     if (stopReason.includes("月初め")) {
-    //         updateView(true); // イベントスキップしてボーナスへ
-    //         showBonusModal();
-    //         UI.statusLog.innerText = `${steps-remainingSteps} 進みました（現在: 翌月${state.currentDay}日）`;
-    //     } else {
-    //         updateView(); // 通常または特殊イベント実行
-    //         UI.statusLog.innerText = `${steps} 進みました（現在: ${state.currentDay}日）`;
-    //     }
-    // }
-
-    function showBonusModal() {
-        UI.modal.style.display = 'flex';
-        document.body.classList.add('modal-open');
-    }
-
-    function applyBonus(type) {
-        let msg = "";
-        if (type === 'money') {
-            const gain = addMoney(GAME_CONFIG.BONUS_MONEY_BASE, "ボーナス");
-            msg = `所持金が ${gain.toLocaleString()}円増えました！`;
-        } else if (type === 'move') {
-            state.currentDay += GAME_CONFIG.BONUS_MOVE_STEPS;
-            msg = `【ボーナス】さらに ${GAME_CONFIG.BONUS_MOVE_STEPS}マス進みました！`;
-            pushLog(msg);
-        } else if (type === 'multiplier') {
-            state.multiplier += GAME_CONFIG.BONUS_MULTIPLIER_ADD;
-            msg = `【ボーナス】収入倍率が ${GAME_CONFIG.BONUS_MULTIPLIER_ADD} 上がりました！`;
-            pushLog(msg);
-        }
-
-        UI.modal.style.display = 'none';
-        document.body.classList.remove('modal-open');
-        UI.statusLog.innerText = msg;
-        updateView(); 
-    }
-
-    // ゲーム開始
     initGrid();
 </script>
+
+
+<div id="new-year-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(45deg, #ff0000, #ffd700); z-index:9999; flex-direction:column; align-items:center; justify-content:center; color:white; text-align:center; font-family:'serif';">
+    <h1 style="font-size: 5rem; text-shadow: 3px 3px 0px #000; margin-bottom: 20px;">🎍 ハッピーニューイヤー！！ 🎍</h1>
+    <div id="fortune-result" style="font-size: 2.5rem; background: rgba(0,0,0,0.5); padding: 20px 40px; border-radius: 50px; border: 4px solid #fff;">
+        </div>
+    <button onclick="location.reload()" style="margin-top: 40px; padding: 15px 30px; font-size: 1.5rem; cursor:pointer; background: #fff; color: #d40000; border:none; border-radius:10px; font-weight:bold;">もう一度遊ぶ</button>
+</div>
 </body>
 </html>
